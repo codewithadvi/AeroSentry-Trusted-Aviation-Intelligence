@@ -45,10 +45,18 @@ app.get("/api/weather/:departure/:destination", async (req, res) => {
     ]);
 
     res.json({
-      departureMetar: depMetar.find((m) => m.icaoId === departure) || null,
-      destinationMetar: destMetar.find((m) => m.icaoId === destination) || null,
-      departureTaf: depTaf.find((t) => t.icaoId === departure) || null,
-      destinationTaf: destTaf.find((t) => t.icaoId === destination) || null,
+      departureMetar:
+        depMetar.features?.find((f) => f.properties.icaoId === departure) ||
+        null,
+      destinationMetar:
+        destMetar.features?.find((f) => f.properties.icaoId === destination) ||
+        null,
+      departureTaf:
+        depTaf.features?.find((t) => t.properties.icaoId === departure) ||
+        null,
+      destinationTaf:
+        destTaf.features?.find((t) => t.properties.icaoId === destination) ||
+        null,
     });
   } catch (err) {
     console.error(err.message);
