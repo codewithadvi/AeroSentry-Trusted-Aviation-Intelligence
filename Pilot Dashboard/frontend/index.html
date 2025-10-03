@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroSentry - 3D Flight Weather Globe</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/globe.gl"></script>
+    <script src="https://unpkg.com/three"></script>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <header class="top-nav">
+        <div class="nav-content">
+            <div class="logo">
+                <h1>✈️ AeroSentry</h1>
+                <span class="tagline">3D Flight Weather Intelligence</span>
+            </div>
+            <div class="flight-inputs">
+                <input 
+                    id="departure" 
+                    type="text" 
+                    placeholder="Departure ICAO (e.g., KJFK)" 
+                    class="form-control airport-input"
+                    maxlength="4"
+                >
+                <input 
+                    id="destination" 
+                    type="text" 
+                    placeholder="Destination ICAO (e.g., KLAX)" 
+                    class="form-control airport-input"
+                    maxlength="4"
+                >
+                <button id="fetchWeather" class="btn btn--primary">
+                    <span class="btn-text">Get Weather</span>
+                    <span class="btn-loading hidden">⏳</span>
+                </button>
+                <button id="visualBriefing" class="control-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-left: 10px;">
+                      📊 Visual Briefing
+                </button>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Application Container -->
+    <main class="app-container">
+        <!-- Left Sidebar - Flight Statistics -->
+        <aside class="left-sidebar">
+            <div class="stats-header">
+                <h3>Flight Statistics</h3>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Route Distance</div>
+                    <div class="stat-value" id="routeDistance">--</div>
+                    <div class="stat-unit">nautical miles</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">Departure Weather</div>
+                    <div class="stat-value" id="depCondition">--</div>
+                    <div class="stat-indicator" id="depIndicator"></div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">Destination Weather</div>
+                    <div class="stat-value" id="destCondition">--</div>
+                    <div class="stat-indicator" id="destIndicator"></div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">Overall Conditions</div>
+                    <div class="stat-value" id="overallCondition">--</div>
+                    <div class="stat-indicator" id="overallIndicator"></div>
+                </div>
+            </div>
+
+            <!-- Weather Details Panel -->
+            <div class="weather-details" id="weatherDetails">
+                <div class="weather-section">
+                    <h4>Latest Updates</h4>
+                    <div class="update-time" id="lastUpdate">No data loaded</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Globe Container -->
+        <div class="globe-container">
+            <div id="globe"></div>
+            
+            <!-- Globe Controls -->
+            <div class="globe-controls">
+                <button id="resetView" class="control-btn" title="Reset View">🌍</button>
+                <button id="toggleRotation" class="control-btn" title="Toggle Auto-Rotation">⚫</button>
+                <button id="zoomIn" class="control-btn" title="Zoom In">+</button>
+                <button id="zoomOut" class="control-btn" title="Zoom Out">-</button>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Fetching weather data...</div>
+            </div>
+
+            <!-- Error Overlay -->
+            <div class="error-overlay hidden" id="errorOverlay">
+                <div class="error-content">
+                    <div class="error-icon">⚠️</div>
+                    <div class="error-message" id="errorMessage">Failed to fetch weather data</div>
+                    <button class="btn btn--secondary" id="retryBtn">Try Again</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar - AI Chatbot -->
+        <aside class="right-sidebar">
+            <div class="chat-header">
+                <h3>🤖 Weather Assistant</h3>
+                <div class="chat-status">Online</div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">
+                        <p>Hello! I'm your AeroSentry flight weather assistant. I can help you understand weather conditions, flight categories, and provide aviation insights. What would you like to know?</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <input 
+                    type="text" 
+                    id="chatInput" 
+                    class="form-control chat-input" 
+                    placeholder="Ask about weather conditions..."
+                    maxlength="200"
+                >
+                <button id="sendMessage" class="btn btn--primary chat-send-btn">Send</button>
+            </div>
+            
+            <div class="quick-questions">
+                <div class="quick-question-label">Quick Questions:</div>
+                <button class="quick-btn" data-question="What do flight categories mean?">Flight Categories</button>
+                <button class="quick-btn" data-question="Explain the current weather conditions">Current Weather</button>
+                <button class="quick-btn" data-question="What should I know about this route?">Route Analysis</button>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Weather Info Modal -->
+    <div class="modal hidden" id="weatherModal">
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Airport Weather</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Weather details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
