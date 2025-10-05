@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AeroSentry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/globals.css">
+    <link rel="stylesheet" href="styles/admin.css">
+</head>
+<body class="admin-dashboard">
+    <nav class="glassmorphism-nav">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="brand-text text-2xl">AeroSentry</div>
+                    <span class="text-gray-400">Admin Dashboard</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-300" id="admin-name">Loading...</span>
+                    <button id="logout-btn" class="logout-button">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div id="stats-overview" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="chart-card">
+                <h3 class="chart-title">API Usage (Last 7 Days)</h3>
+                <canvas id="api-chart" height="250"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Risk Category Distribution</h3>
+                <canvas id="risk-chart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Loading Admin Dashboard...</p>
+        </div>
+    </div>
+
+    <script src="scripts/auth.js"></script>
+    <script type="module" src="scripts/api.js"></script>
+    <script type="module" src="scripts/admin.js"></script>
+    <link rel="stylesheet" href="styles/chatbot.css">
+    <script src="scripts/chatbot.js"></script>
+</body>
+</html>

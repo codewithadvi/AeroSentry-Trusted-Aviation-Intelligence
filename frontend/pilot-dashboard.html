@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilot Dashboard - AeroSentry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles/globals.css">
+    <link rel="stylesheet" href="styles/chatbot.css">
+</head>
+
+<body class="w-screen h-screen flex items-center justify-center p-4 lg:p-6 bg-gray-900">
+
+    <button id="logout-btn"
+        class="absolute top-4 right-4 z-20 bg-red-500/20 text-red-400 px-4 py-2 rounded-lg border border-red-500/50 hover:bg-red-500/30 transition-colors">
+        Logout
+    </button>
+    <span id="pilot-name" class="absolute top-4 right-28 z-20 text-gray-300 px-4 py-2"></span>
+
+    <div id="starfield"></div>
+    <div id="loading-overlay"
+        class="hidden absolute inset-0 bg-black bg-opacity-80 flex-col items-center justify-center z-50 transition-opacity duration-500">
+        <div class="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 text-lg text-gray-300">Fetching Mission Briefing...</p>
+    </div>
+
+    <div class="w-full h-full max-w-screen-2xl mx-auto flex flex-col lg:flex-row gap-4">
+
+        <!-- Map Container -->
+        <div class="flex-grow flex flex-col h-1/2 lg:h-full lg:w-3/5 relative">
+            <h1 class="absolute top-4 left-4 text-3xl md:text-4xl brand-text z-10">AeroSentry</h1>
+            <div class="absolute top-4 right-4 z-10">
+                <button id="toggle-spoofing-view"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2">
+                    <span id="spoofing-icon">🔍</span>
+                    <span id="spoofing-text">Show Spoofing Analysis</span>
+                </button>
+            </div>
+
+            <div id="map-container" class="w-full h-full rounded-2xl overflow-hidden border border-gray-800"></div>
+
+            <!-- Spoofing Alert Panel -->
+            <div id="spoofing-alert"
+                class="hidden absolute bottom-4 left-4 right-4 bg-red-900/90 border border-red-500 rounded-lg p-4 text-white z-10 backdrop-blur-sm">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-lg flex items-center gap-2">
+                            <span>🚨</span>
+                            <span>Weather Spoofing Detected!</span>
+                        </h3>
+                        <p id="spoofing-details" class="text-sm mt-1">Synthetic data inconsistencies identified</p>
+                    </div>
+                    <button id="close-alert"
+                        class="text-red-300 hover:text-white text-2xl font-bold bg-red-800/50 rounded-full w-8 h-8 flex items-center justify-center">×</button>
+                </div>
+                <div id="spoofing-indicators" class="text-xs mt-2 space-y-1"></div>
+            </div>
+
+            <!-- View Mode Indicator -->
+            <div id="view-mode-indicator"
+                class="absolute top-16 right-4 bg-gray-900/80 text-white px-3 py-1 rounded-lg text-sm font-medium z-10 backdrop-blur-sm">
+                📡 Real-time Data View
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="w-full lg:w-2/5 h-1/2 lg:h-full flex flex-col gap-4">
+            <div class="glassmorphism rounded-2xl p-4 flex flex-col">
+                <h2 class="text-lg font-semibold text-gray-200 mb-2 text-center">Flight Route</h2>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input type="text" id="departure" placeholder="Departure ICAO (e.g., VOBL)"
+                        class="w-full bg-gray-900/50 border border-gray-700 rounded-md px-3 py-2 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition duration-300">
+                    <input type="text" id="destination" placeholder="Destination ICAO (e.g., VOMM)"
+                        class="w-full bg-gray-900/50 border border-gray-700 rounded-md px-3 py-2 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition duration-300">
+                </div>
+                <div class="flex gap-3 mt-3">
+                    <button id="brief-button"
+                        class="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-lg shadow-cyan-600/20">
+                        Generate Briefing
+                    </button>
+                    <button id="download-report"
+                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-lg shadow-green-600/20 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        Download Report
+                    </button>
+                </div>
+            </div>
+
+            <div class="glassmorphism rounded-2xl p-4 grid grid-cols-2 grid-rows-2 gap-4">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <p class="text-sm text-gray-400">Visibility</p>
+                    <p class="text-2xl md:text-3xl font-bold text-blue-400 stat-value"><span
+                            id="stat-visibility">--</span><span
+                            class="text-base font-normal text-gray-400 ml-1">SM</span></p>
+                </div>
+                <div class="flex flex-col items-center justify-center text-center">
+                    <p class="text-sm text-gray-400">Overall Risk</p>
+                    <p id="stat-risk" class="text-2xl md:text-3xl font-bold text-gray-500 stat-value">--</p>
+                </div>
+                <div class="flex flex-col items-center justify-center text-center">
+                    <p class="text-sm text-gray-400">Lowest Ceiling</p>
+                    <p class="text-2xl md:text-3xl font-bold text-green-400 stat-value"><span
+                            id="stat-ceiling">--</span><span class="text-base font-normal text-gray-400 ml-1">ft</span>
+                    </p>
+                </div>
+                <div class="flex flex-col items-center justify-center text-center">
+                    <p class="text-sm text-gray-400">Max Wind</p>
+                    <p class="text-2xl md:text-3xl font-bold text-red-400 stat-value"><span
+                            id="stat-wind">--</span><span class="text-base font-normal text-gray-400 ml-1">kts</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="glassmorphism rounded-2xl p-4 flex-grow flex flex-col min-h-0">
+                <h2 class="text-lg font-semibold text-gray-200 mb-2">AI Assistant Briefing</h2>
+                <div id="chat-messages" class="flex-grow overflow-y-auto custom-scrollbar pr-2 space-y-3 mb-3">
+                    <!-- Chat messages will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Container -->
+    <div id="aerosentry-chatbot" class="chatbot-container">
+        <div id="chatbot-toggle" class="chatbot-toggle">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+        </div>
+
+        <div id="chatbot-window" class="chatbot-window hidden">
+            <div class="chatbot-header">
+                <h3 class="chatbot-title">AeroSentry AI Assistant</h3>
+                <button id="chatbot-close" class="chatbot-close-btn">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div id="chatbot-messages" class="chatbot-messages">
+                <div class="chatbot-welcome">
+                    <p>👋 Hello! I'm your AeroSentry AI assistant. I can help you with:</p>
+                    <ul>
+                        <li>• Weather interpretation</li>
+                        <li>• Flight planning advice</li>
+                        <li>• METAR/TAF explanations</li>
+                        <li>• Aviation safety questions</li>
+                    </ul>
+                    <p>Ask me anything about your flight briefing!</p>
+                </div>
+            </div>
+
+            <div class="chatbot-input-container">
+                <div class="chatbot-input-wrapper">
+                    <input type="text" id="chatbot-input" placeholder="Ask about weather, routes, or safety..."
+                        class="chatbot-input" maxlength="500">
+                    <button id="chatbot-send" class="chatbot-send-btn">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="chatbot-disclaimer">
+                    <small>AI responses are for guidance only. Always consult official sources.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/spoofing-detection.js"></script>
+    <script src="scripts/map-manager.js"></script>
+    <script type="module" src="scripts/api.js"></script>
+    <script type="module" src="scripts/app.js"></script>
+    <script src="scripts/chatbot.js"></script>
+</body>
+
+</html>
