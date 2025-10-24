@@ -8,7 +8,7 @@ It acts as a digital co-pilot, transforming raw, complex aviation weather data i
 
 ---
 
-## ✨ Core Features
+## Core Features
 
 AeroSentry is built as a two-part system, ensuring that both the flight crew and ground control have access to synchronized, role-specific intelligence.
 
